@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ttcs-backend
+  labels:
+    app: ttcs-backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ttcs-backend
+  template:
+    metadata:
+      labels:
+        app: ttcs-backend
+    spec:
+      containers:
+      - name: backend
+        image: ttcs/backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: APP_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ttcs-config
+              key: APP_ENV
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ttcs-config
+              key: DB_HOST
+        - name: RABBITMQ_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: ttcs-config
+              key: RABBITMQ_HOST
+        resources:
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
